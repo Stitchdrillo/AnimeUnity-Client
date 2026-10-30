@@ -1,0 +1,10 @@
+json
+os
+sqlite3
+threading
+re
+traceback
+cloudscraper
+PyQt6
+functools
+shutil

@@ -1,0 +1,9 @@
+# Covers folder
+/assets/
+
+# Config and DB
+/config.json
+/library.db
+
+# Python auto generated stuff
+__pycache__/
