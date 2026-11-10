@@ -106,7 +106,8 @@ class LibraryTab(QWidget):
         self.assets_dir = os.path.join(self.base_dir, "..", "assets", "covers")
         os.makedirs(self.assets_dir, exist_ok=True)
         
-        self.episode_ui_elements = {} 
+        self.episode_ui_elements = {}
+        self.queued_episodes = set()
         
         self.setup_ui()
 
@@ -363,6 +364,10 @@ class LibraryTab(QWidget):
             display_name = f"{self.current_anime['title']} - Ep {ep['episode_number']}"
             btn.clicked.connect(lambda _, ed=ep_data, dn=display_name, k=btn_key: self.queue_episode(ed, dn, k))
             
+            if btn_key in self.queued_episodes:
+                btn.setText("Queued...")
+                btn.setEnabled(False)
+            
             action_layout.addWidget(btn)
             
             self.episode_ui_elements[btn_key]['dl_btn'] = btn
@@ -539,6 +544,7 @@ class LibraryTab(QWidget):
         self.filter_library()
     
     def queue_episode(self, ep_data, display_name, btn_key):
+        self.queued_episodes.add(btn_key)
         ui = self.episode_ui_elements.get(btn_key)
         if ui and 'dl_btn' in ui:
             ui['dl_btn'].setText("Queued...")
@@ -549,41 +555,49 @@ class LibraryTab(QWidget):
     def on_episode_downloaded(self, anime_id, ep_num):
         """Called when DownloadTab finishes an episode. Swaps Download out for Play/Delete."""
         btn_key = f"{anime_id}_{ep_num}"
+        self.queued_episodes.discard(btn_key)
         ui = self.episode_ui_elements.get(btn_key)
         
-        if ui and hasattr(self, 'current_anime') and self.current_anime['id'] == anime_id:
-            ui['label'].setStyleSheet("")
-            
-            layout = ui['action_layout']
-            while layout.count():
-                child = layout.takeAt(0)
-                if child.widget():
-                    child.widget().deleteLater()
-            
-            ep_db = next((e for e in self.db_manager.get_episodes_by_anime(anime_id) if str(e['episode_number']) == str(ep_num)), None)
-            
-            if ep_db:
-                play_btn = QPushButton("Play")
-                play_btn.setFixedWidth(80)
-                play_btn.clicked.connect(lambda _, aid=anime_id, num=ep_num, path=ep_db['file_path']: self.launch_player(aid, num, path))
+        if ui and hasattr(self, 'current_anime') and int(self.current_anime['id']) == int(anime_id):
+            try:
+                ui['label'].setStyleSheet("") 
                 
-                del_btn = QPushButton("Delete")
-                del_btn.setFixedWidth(80)
-                del_btn.setStyleSheet("color: #d9534f;")
-                del_btn.clicked.connect(lambda _, aid=anime_id, num=ep_num, path=ep_db['file_path']: self.delete_local_episode(aid, num, path))
+                layout = ui['action_layout']
+                while layout.count():
+                    child = layout.takeAt(0)
+                    if child.widget():
+                        child.widget().deleteLater()
                 
-                layout.addWidget(play_btn)
-                layout.addWidget(del_btn)
+                ep_db = next((e for e in self.db_manager.get_episodes_by_anime(anime_id) if str(e['episode_number']) == str(ep_num)), None)
+                
+                if ep_db:
+                    play_btn = QPushButton("Play")
+                    play_btn.setFixedWidth(80)
+                    play_btn.clicked.connect(lambda _, aid=anime_id, num=ep_num, path=ep_db['file_path']: self.launch_player(aid, num, path))
+                    
+                    del_btn = QPushButton("Delete")
+                    del_btn.setFixedWidth(80)
+                    del_btn.setStyleSheet("color: #d9534f;")
+                    del_btn.clicked.connect(lambda _, aid=anime_id, num=ep_num, path=ep_db['file_path']: self.delete_local_episode(aid, num, path))
+                    
+                    layout.addWidget(play_btn)
+                    layout.addWidget(del_btn)
+            except RuntimeError:
+                pass
     
     @pyqtSlot(int, str)
     def on_episode_download_cancelled(self, anime_id, ep_num):
         """Called when a download is aborted or fails to revert the UI button."""
         btn_key = f"{anime_id}_{ep_num}"
+        self.queued_episodes.discard(btn_key)
         ui = self.episode_ui_elements.get(btn_key)
-        
-        if ui and 'dl_btn' in ui:
-            ui['dl_btn'].setText("Download")
-            ui['dl_btn'].setEnabled(True)
+
+        if ui and 'dl_btn' in ui and hasattr(self, 'current_anime') and int(self.current_anime['id']) == int(anime_id):
+            try:
+                ui['dl_btn'].setText("Download")
+                ui['dl_btn'].setEnabled(True)
+            except RuntimeError:
+                pass
     
     def setup_player_page(self):
         layout = QVBoxLayout()
