@@ -46,7 +46,12 @@ class DownloadWorker(QRunnable):
 
             embed_url_request = f"{base_domain}/embed-url/{ep_id}"
             embed_url = self.scraper.get(embed_url_request, timeout=15).text.strip()
-            video_page_html = self.scraper.get(embed_url, timeout=15).text
+            
+            embed_headers = {
+                            "Referer": f"{base_domain}/"
+                        }
+            
+            video_page_html = self.scraper.get(embed_url, headers = embed_headers, timeout=15).text
             
             dl_match = re.search(r"window\.downloadUrl\s*=\s*'(https?://[^']+)'", video_page_html)
             if not dl_match:
@@ -181,7 +186,7 @@ class LibrarySyncWorker(QRunnable):
                     relative_api_path = f"/info_api/{anime_slug}"
                     
                     existing_record = existing_anime.get(relative_api_path)
-                    if existing_record and str(existing_record.get('status', '')).strip().lower() in ["terminato", "finished", "completed"]:
+                    if existing_record and str(existing_record.get('status', '')).strip().lower() in ["terminato", "droppato"]:
                         
                         saved_ep_count = self.db_manager.get_saved_episode_count(existing_record['id'])
                         expected_ep_count = existing_record.get('total_episodes', 0)
