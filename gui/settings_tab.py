@@ -5,6 +5,7 @@ from PyQt6.QtWidgets import (
     QPushButton, QSpinBox, QFileDialog, QMessageBox, QFormLayout,
     QCheckBox
     )
+from PyQt6.QtCore import Qt
 
 class SettingsTab(QWidget):
     def __init__(self, config_manager, db_manager):
@@ -62,6 +63,19 @@ class SettingsTab(QWidget):
         layout.addWidget(self.purge_btn)
         
         layout.addStretch()
+        
+        credits_text = (
+            "<div style='text-align: center; color: #7f8c8d;'>"
+            "<p style='font-size: 14px; font-weight: bold; margin-bottom: 2px;'>Anime Library Client</p>"
+            "<p style='font-size: 12px; margin-top: 0px;'>Version 1.0.0 &copy; 2026</p>"
+            "<p style='font-size: 11px; font-style: italic;'>Developed by <a href='https://github.com/Stitchdrillo'>Stitchdrillo</a></p>"
+            "</div>"
+        )
+        self.credits_label = QLabel(credits_text)
+        self.credits_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.credits_label.setOpenExternalLinks(True)
+        layout.addWidget(self.credits_label)
+
         self.setLayout(layout)
 
     def browse_directory(self):
