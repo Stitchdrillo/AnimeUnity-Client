@@ -8,7 +8,7 @@ class ConfigManager:
             "download_directory": os.path.join(os.path.expanduser("~"), "Videos", "Anime"),
             "max_concurrent_downloads": 4,
             "chunk_size_kb": 1024,
-            "base_domain": "https://www.animeunity.co",
+            "base_domain": "https://animeunity.cx",
             "auto_download_next": False,
             "auto_delete_seen": False
         }
