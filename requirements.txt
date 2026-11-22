@@ -1,2 +1,9 @@
-cloudscraper
-PyQt6
+# GUI framework & local video playback
+
+PyQt6>=6.6.0
+
+
+
+# HTTP client with Cloudflare challenge handling
+
+cloudscraper>=1.2.71
